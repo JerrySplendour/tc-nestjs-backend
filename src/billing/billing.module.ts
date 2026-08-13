@@ -1,0 +1,1 @@
+import { Module } from '@nestjs/common'; import { TypeOrmModule } from '@nestjs/typeorm'; import { Payment, Subscription } from '../database/entities'; import { BillingController } from './billing.controller'; @Module({ imports: [TypeOrmModule.forFeature([Subscription, Payment])], controllers: [BillingController] }) export class BillingModule {}
