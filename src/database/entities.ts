@@ -1,6 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, Unique } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, Unique, BaseEntity as TypeOrmBaseEntity } from 'typeorm';
 
-abstract class BaseEntity {
+abstract class BaseEntity extends TypeOrmBaseEntity {
     @PrimaryGeneratedColumn()
     id!: number;
     @CreateDateColumn({ name: 'created_at' })
@@ -94,7 +94,7 @@ export class Enrollment extends BaseEntity {
     programId!: number;
     @Column({ default: 'active' })
     status!: string;
-    @Column({ name: 'enrolled_at', type: 'timestamp' })
+    @Column({ name: 'enrolled_at', type: 'datetime' })
     enrolledAt!: Date;
 }
 
@@ -178,7 +178,7 @@ export class LessonCompletion extends BaseEntity {
     userId!: number;
     @Column({ name: 'lesson_id' })
     lessonId!: number;
-    @Column({ name: 'completed_at', type: 'timestamp' })
+    @Column({ name: 'completed_at', type: 'datetime' })
     completedAt!: Date;
 }
 
@@ -190,7 +190,7 @@ export class Certificate extends BaseEntity {
     userId!: number;
     @Column({ name: 'certificate_number', unique: true })
     certificateNumber!: string;
-    @Column({ name: 'issued_at', type: 'timestamp' })
+    @Column({ name: 'issued_at', type: 'datetime' })
     issuedAt!: Date;
 }
 
@@ -317,7 +317,7 @@ export class WorkoutCompletion extends BaseEntity {
     userId!: number;
     @Column({ name: 'workout_id' })
     workoutId!: number;
-    @Column({ name: 'completed_at', type: 'timestamp' })
+    @Column({ name: 'completed_at', type: 'datetime' })
     completedAt!: Date;
 }
 
