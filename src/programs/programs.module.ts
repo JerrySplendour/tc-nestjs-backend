@@ -1,1 +1,10 @@
-import { Module } from '@nestjs/common'; import { TypeOrmModule } from '@nestjs/typeorm'; import { Enrollment, OnboardingState, Program } from '../database/entities'; import { EnrollmentsController, ProgramsController } from './programs.controller'; @Module({ imports: [TypeOrmModule.forFeature([Program, Enrollment, OnboardingState])], controllers: [ProgramsController, EnrollmentsController] }) export class ProgramsModule {}
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Enrollment, OnboardingState, Program } from '../database/entities';
+import { EnrollmentsController, ProgramsController } from './programs.controller';
+
+@Module({
+    imports: [TypeOrmModule.forFeature([Program, Enrollment, OnboardingState])],
+    controllers: [ProgramsController, EnrollmentsController]
+})
+export class ProgramsModule { }
