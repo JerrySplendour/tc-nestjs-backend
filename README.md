@@ -31,6 +31,9 @@ S3_ACCESS_KEY_ID=<YOUR_R2_ACCESS_KEY>
 S3_SECRET_ACCESS_KEY=<YOUR_R2_SECRET_KEY>
 S3_BUCKET=tc-academy-media
 MEDIA_PUBLIC_URL=https://pub-xxxx.r2.dev
+
+# Resend (Emails)
+RESEND_API_KEY=re_your_resend_api_key_here
 ```
 
 ### Running Locally
@@ -66,6 +69,7 @@ Add the following Environment Variables in your Render Dashboard for the Web Ser
 - `S3_SECRET_ACCESS_KEY`: `<YOUR_R2_SECRET_KEY>`
 - `S3_BUCKET`: `<YOUR_R2_BUCKET_NAME>`
 - `MEDIA_PUBLIC_URL`: `https://<YOUR_R2_PUBLIC_DOMAIN>`
+- `RESEND_API_KEY`: `<YOUR_RESEND_API_KEY>`
 
 *(Note: `ssl: { rejectUnauthorized: false }` is automatically enabled in production by `app.module.ts` to satisfy Render Postgres requirements).*
 
@@ -111,3 +115,16 @@ To allow the frontend to upload media directly via Presigned URLs, you must conf
 3. Name it "TC Academy Backend".
 4. Set Permissions to **Object Read & Write**.
 5. Create the token. Use the generated `Access Key ID` and `Secret Access Key` for the environment variables in Render.
+
+---
+
+## 4. Email Sending (Resend)
+
+The backend uses **Resend** for sending broadcast emails and newsletters.
+
+1. Go to [Resend.com](https://resend.com) and create an account.
+2. In your dashboard, go to **API Keys** and click **Create API Key**.
+3. Name it "TC Academy Backend" and give it full access (or sending access).
+4. Copy the generated key and add it to your `.env` and Render Environment Variables as `RESEND_API_KEY`.
+5. You also need to verify your sending domain in the Resend dashboard under **Domains** so emails can be sent reliably.
+6. **Webhook Configuration (Analytics)**: To track email opens, clicks, and bounces, go to **Webhooks** in the Resend dashboard. Click **Add Webhook** and set the Endpoint URL to your backend's webhook route: `https://tc-nestjs-backend.onrender.com/newsletter/webhooks`. Select the events you want to track (e.g. `email.opened`, `email.clicked`, `email.bounced`) and save.

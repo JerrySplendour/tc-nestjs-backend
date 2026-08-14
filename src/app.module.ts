@@ -11,6 +11,8 @@ import { CommunityModule } from './community/community.module';
 import { EventsModule } from './events/events.module';
 import { FitnessModule } from './fitness/fitness.module';
 import { BillingModule } from './billing/billing.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { AdminModule } from '@adminjs/nestjs';
 import * as AdminJSTypeorm from '@adminjs/typeorm';
@@ -122,6 +124,8 @@ AdminJS.registerAdapter({
     EventsModule,
     FitnessModule,
     BillingModule,
+    NewsletterModule,
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}

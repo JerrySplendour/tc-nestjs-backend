@@ -356,6 +356,50 @@ export class Payment extends BaseEntity {
 }
 
 
+@Entity('subscribers')
+@Unique(['email'])
+export class Subscriber extends BaseEntity {
+    @Column()
+    email!: string;
+    @Column({ name: 'first_name', nullable: true })
+    firstName?: string;
+    @Column({ name: 'last_name', nullable: true })
+    lastName?: string;
+    @Column({ default: 'active' })
+    status!: string;
+    @Column({ name: 'opt_in_date', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    optInDate!: Date;
+}
+
+@Entity('broadcasts')
+export class Broadcast extends BaseEntity {
+    @Column()
+    subject!: string;
+    @Column({ type: 'text', name: 'content_html' })
+    contentHtml!: string;
+    @Column({ type: 'simple-json', name: 'content_json', nullable: true })
+    contentJson?: Record<string, unknown>;
+    @Column({ default: 'draft' })
+    status!: string;
+    @Column({ name: 'scheduled_at', type: 'timestamp', nullable: true })
+    scheduledAt?: Date;
+    @Column({ name: 'sent_at', type: 'timestamp', nullable: true })
+    sentAt?: Date;
+}
+
+@Entity('broadcast_analytics')
+export class BroadcastAnalytics extends BaseEntity {
+    @Column({ name: 'broadcast_id' })
+    broadcastId!: number;
+    @Column({ name: 'subscriber_id' })
+    subscriberId!: number;
+    @Column({ name: 'event_type' })
+    eventType!: string;
+    @Column({ name: 'event_date', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    eventDate!: Date;
+}
+
+
 export const entities = [
     User,
     Media,
@@ -377,4 +421,8 @@ export const entities = [
     FitnessWorkout,
     WorkoutCompletion,
     Subscription,
-    Payment];
+    Payment,
+    Subscriber,
+    Broadcast,
+    BroadcastAnalytics
+];
