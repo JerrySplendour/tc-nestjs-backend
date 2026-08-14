@@ -53,6 +53,28 @@ export class NewsletterController {
     return this.newsletterService.sendBroadcast(Number(id));
   }
 
+  // --- Templates Endpoints ---
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'superadmin')
+  @Get('templates')
+  async getTemplates() {
+    return this.newsletterService.getTemplates();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'superadmin')
+  @Post('templates')
+  async saveTemplate(@Body() body: any) {
+    return this.newsletterService.saveTemplate(body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'superadmin')
+  @Delete('templates/:id')
+  async deleteTemplate(@Param('id') id: string) {
+    return this.newsletterService.deleteTemplate(Number(id));
+  }
+
   @Post('webhooks')
   async handleWebhook(@Body() payload: any) {
     return this.newsletterService.handleWebhook(payload);

@@ -1,3 +1,96 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common'; import { IsBoolean, IsOptional, IsString } from 'class-validator'; import { InjectRepository } from '@nestjs/typeorm'; import { Repository } from 'typeorm'; import { JwtAuthGuard, Roles, RolesGuard } from '../common/auth'; import { CommunityComment, CommunityPost, CommunitySettings } from '../database/entities';
-class PostDto { @IsString() title!: string; @IsString() content!: string; @IsOptional() @IsString() mediaUrl?: string; } class CommentDto { @IsString() content!: string; } class SettingsDto { @IsOptional() @IsBoolean() postingEnabled?: boolean; @IsOptional() @IsBoolean() commentsEnabled?: boolean; @IsOptional() @IsBoolean() likesEnabled?: boolean; }
-@Controller('community') @UseGuards(JwtAuthGuard) export class CommunityController { constructor(@InjectRepository(CommunityPost) private posts: Repository<CommunityPost>, @InjectRepository(CommunityComment) private comments: Repository<CommunityComment>, @InjectRepository(CommunitySettings) private settings: Repository<CommunitySettings>) {} @Get('programs/:programId/posts') postsForProgram(@Param('programId') programId: number) { return this.posts.findBy({ programId }); } @Post('programs/:programId/posts') create(@Req() req: any, @Param('programId') programId: number, @Body() dto: PostDto) { return this.posts.save(this.posts.create({ ...dto, programId, authorId: req.user.id })); } @Get('posts/:id') post(@Param('id') id: number) { return this.posts.findOneByOrFail({ id }); } @Put('posts/:id') async update(@Req() req: any, @Param('id') id: number, @Body() dto: PostDto) { const post = await this.post(id); if (post.authorId !== req.user.id && req.user.role !== 'admin') throw new Error('Forbidden'); await this.posts.update(id, dto); return this.post(id); } @Delete('posts/:id') async remove(@Req() req: any, @Param('id') id: number) { const post = await this.post(id); if (post.authorId !== req.user.id && req.user.role !== 'admin') throw new Error('Forbidden'); await this.posts.delete(id); return { deleted: true }; } @Post('posts/:id/like') async like(@Param('id') id: number) { const post = await this.post(id); post.likes++; return this.posts.save(post); } @Get('posts/:postId/comments') commentsForPost(@Param('postId') postId: number) { return this.comments.findBy({ postId }); } @Post('posts/:postId/comments') comment(@Req() req: any, @Param('postId') postId: number, @Body() dto: CommentDto) { return this.comments.save(this.comments.create({ ...dto, postId, authorId: req.user.id })); } @Delete('comments/:id') async deleteComment(@Req() req: any, @Param('id') id: number) { const comment = await this.comments.findOneByOrFail({ id }); if (comment.authorId !== req.user.id && req.user.role !== 'admin') throw new Error('Forbidden'); await this.comments.delete(id); return { deleted: true }; } @Get('programs/:programId/settings') async getSettings(@Param('programId') programId: number) { return (await this.settings.findOneBy({ programId })) || this.settings.save(this.settings.create({ programId })); } @Put('programs/:programId/settings') @UseGuards(RolesGuard) @Roles('admin') async updateSettings(@Param('programId') programId: number, @Body() dto: SettingsDto) { const settings = await this.getSettings(programId); return this.settings.save(Object.assign(settings, dto)); } }
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { JwtAuthGuard, Roles, RolesGuard } from '../common/auth';
+import { CommunityComment, CommunityPost, CommunitySettings } from '../database/entities';
+import { BadRequestException } from '@nestjs/common';
+
+class PostDto { @IsString() title!: string; @IsString() content!: string; @IsOptional() @IsString() mediaUrl?: string; }
+class CommentDto { @IsString() content!: string; }
+class SettingsDto {
+    @IsOptional() @IsBoolean() postingEnabled?: boolean;
+    @IsOptional() @IsBoolean() commentsEnabled?: boolean;
+    @IsOptional() @IsBoolean() likesEnabled?: boolean;
+}
+
+@Controller('community')
+@UseGuards(JwtAuthGuard)
+export class CommunityController {
+    constructor(
+        @InjectRepository(CommunityPost) private posts: Repository<CommunityPost>,
+        @InjectRepository(CommunityComment) private comments: Repository<CommunityComment>,
+        @InjectRepository(CommunitySettings) private settings: Repository<CommunitySettings>
+    ) { }
+
+    @Get('programs/:programId/posts')
+    postsForProgram(@Param('programId') programId: number) {
+        return this.posts.findBy({ programId });
+    }
+
+    @Post('programs/:programId/posts')
+    create(@Req() req: any, @Param('programId') programId: number, @Body() dto: PostDto) {
+        return this.posts.save(this.posts.create({ ...dto, programId, authorId: req.user.id }));
+    }
+
+    @Get('posts/:id')
+    post(@Param('id') id: number) {
+        return this.posts.findOneByOrFail({ id });
+    }
+
+    @Put('posts/:id')
+    async update(@Req() req: any, @Param('id') id: number, @Body() dto: PostDto) {
+        const post = await this.post(id);
+        if (post.authorId !== req.user.id && req.user.role !== 'admin') throw new BadRequestException('Forbidden');
+        await this.posts.update(id, dto);
+        return this.post(id);
+    }
+
+    @Delete('posts/:id')
+    async remove(@Req() req: any, @Param('id') id: number) {
+        const post = await this.post(id);
+        if (post.authorId !== req.user.id && req.user.role !== 'admin') throw new BadRequestException('Forbidden');
+        await this.posts.delete(id);
+        return { deleted: true };
+    }
+
+    @Post('posts/:id/like')
+    async like(@Param('id') id: number) {
+        const post = await this.post(id);
+        post.likes++;
+        return this.posts.save(post);
+    }
+
+    @Get('posts/:postId/comments')
+    commentsForPost(@Param('postId') postId: number) {
+        return this.comments.findBy({ postId });
+    }
+
+    @Post('posts/:postId/comments')
+    comment(@Req() req: any, @Param('postId') postId: number, @Body() dto: CommentDto) {
+        return this.comments.save(this.comments.create({ ...dto, postId, authorId: req.user.id }));
+    }
+
+    @Delete('comments/:id')
+    async deleteComment(@Req() req: any, @Param('id') id: number) {
+        const comment = await this.comments.findOneByOrFail({ id });
+        if (comment.authorId !== req.user.id && req.user.role !== 'admin') throw new BadRequestException('Forbidden');
+        await this.comments.delete(id);
+        return { deleted: true };
+    }
+
+    @Get('programs/:programId/settings')
+    async getSettings(@Param('programId') programId: number) {
+        const existing = await this.settings.findOneBy({ programId });
+        if (existing) return existing;
+        return this.settings.save(this.settings.create({ programId }));
+    }
+
+    @Put('programs/:programId/settings')
+    @UseGuards(RolesGuard)
+    @Roles('admin')
+    async updateSettings(@Param('programId') programId: number, @Body() dto: SettingsDto) {
+        const settings = await this.getSettings(programId);
+        return this.settings.save({ ...settings, ...dto });
+    }
+}

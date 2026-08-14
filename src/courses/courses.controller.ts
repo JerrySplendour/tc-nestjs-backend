@@ -1,2 +1,107 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common'; import { InjectRepository } from '@nestjs/typeorm'; import { Repository } from 'typeorm'; import { JwtAuthGuard, Roles, RolesGuard } from '../common/auth'; import { Certificate, Course, CourseModule, Lesson, LessonCompletion } from '../database/entities'; import { CourseDto, IssueCertificateDto, LessonDto, ModuleDto } from './courses.dto';
-@Controller() export class CoursesController { constructor(@InjectRepository(Course) private readonly courses: Repository<Course>, @InjectRepository(CourseModule) private readonly modules: Repository<CourseModule>, @InjectRepository(Lesson) private readonly lessons: Repository<Lesson>, @InjectRepository(LessonCompletion) private readonly completions: Repository<LessonCompletion>, @InjectRepository(Certificate) private readonly certificates: Repository<Certificate>) {} @Get('courses') list() { return this.courses.find(); } @Post('courses') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') create(@Body() dto: CourseDto) { return this.courses.save(this.courses.create(dto)); } @Get('courses/:id') get(@Param('id') id: number) { return this.courses.findOneByOrFail({ id }); } @Put('courses/:id') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') async update(@Param('id') id: number, @Body() dto: CourseDto) { await this.courses.update(id, dto); return this.get(id); } @Delete('courses/:id') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') async remove(@Param('id') id: number) { await this.courses.delete(id); return { deleted: true }; } @Get('courses/:courseId/modules') modulesForCourse(@Param('courseId') courseId: number) { return this.modules.findBy({ courseId }); } @Post('courses/:courseId/modules') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') addModule(@Param('courseId') courseId: number, @Body() dto: ModuleDto) { return this.modules.save(this.modules.create({ ...dto, courseId })); } @Put('courses/modules/:id') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') async updateModule(@Param('id') id: number, @Body() dto: ModuleDto) { await this.modules.update(id, dto); return this.modules.findOneByOrFail({ id }); } @Delete('courses/modules/:id') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') async deleteModule(@Param('id') id: number) { await this.modules.delete(id); return { deleted: true }; } @Get('modules/:moduleId/lessons') lessonsForModule(@Param('moduleId') moduleId: number) { return this.lessons.findBy({ moduleId }); } @Post('modules/:moduleId/lessons') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') addLesson(@Param('moduleId') moduleId: number, @Body() dto: LessonDto) { return this.lessons.save(this.lessons.create({ ...dto, moduleId })); } @Put('lessons/:id') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') async updateLesson(@Param('id') id: number, @Body() dto: LessonDto) { await this.lessons.update(id, dto); return this.lessons.findOneByOrFail({ id }); } @Delete('lessons/:id') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') async deleteLesson(@Param('id') id: number) { await this.lessons.delete(id); return { deleted: true }; } @Post('lessons/:id/complete') @UseGuards(JwtAuthGuard) async complete(@Req() req: any, @Param('id') lessonId: number) { return this.completions.save(this.completions.create({ userId: req.user.id, lessonId, completedAt: new Date() })); } @Post('courses/:id/certificates/issue') @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') issue(@Param('id') courseId: number, @Body() dto: IssueCertificateDto) { return this.certificates.save(this.certificates.create({ courseId, userId: dto.userId, certificateNumber: `TC-${courseId}-${Date.now()}`, issuedAt: new Date() })); } @Get('courses/:id/certificates') @UseGuards(JwtAuthGuard) certificatesForCourse(@Param('id') courseId: number) { return this.certificates.findBy({ courseId }); } }
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { JwtAuthGuard, Roles, RolesGuard } from '../common/auth';
+import { Certificate, Course, CourseModule, Lesson, LessonCompletion } from '../database/entities';
+import { CourseDto, IssueCertificateDto, LessonDto, ModuleDto } from './courses.dto';
+
+@Controller()
+export class CoursesController {
+    constructor(
+        @InjectRepository(Course) private readonly courses: Repository<Course>,
+        @InjectRepository(CourseModule) private readonly modules: Repository<CourseModule>,
+        @InjectRepository(Lesson) private readonly lessons: Repository<Lesson>,
+        @InjectRepository(LessonCompletion) private readonly completions: Repository<LessonCompletion>,
+        @InjectRepository(Certificate) private readonly certificates: Repository<Certificate>
+    ) { }
+
+    @Get('courses')
+    list() {
+        return this.courses.find();
+    }
+
+    @Post('courses')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin')
+    create(@Body() dto: CourseDto) {
+        return this.courses.save(this.courses.create(dto));
+    }
+
+    @Get('courses/:id')
+    get(@Param('id') id: number) {
+        return this.courses.findOneByOrFail({ id });
+    }
+
+    @Put('courses/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin')
+    async update(@Param('id') id: number, @Body() dto: CourseDto) {
+        await this.courses.update(id, dto); return this.get(id);
+    }
+
+    @Delete('courses/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin')
+    async remove(@Param('id') id: number) {
+        await this.courses.delete(id); return { deleted: true };
+    }
+
+    @Get('courses/:courseId/modules')
+    modulesForCourse(@Param('courseId') courseId: number) {
+        return this.modules.findBy({ courseId });
+    }
+
+    @Post('courses/:courseId/modules')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin')
+    addModule(@Param('courseId') courseId: number, @Body() dto: ModuleDto) {
+        return this.modules.save(this.modules.create({ ...dto, courseId }));
+    }
+
+    @Put('courses/modules/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin')
+    async updateModule(@Param('id') id: number, @Body() dto: ModuleDto) {
+        await this.modules.update(id, dto); return this.modules.findOneByOrFail({ id });
+    }
+
+    @Delete('courses/modules/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin')
+    async deleteModule(@Param('id') id: number) {
+        await this.modules.delete(id); return { deleted: true };
+    }
+
+    @Get('modules/:moduleId/lessons')
+    lessonsForModule(@Param('moduleId') moduleId: number) {
+        return this.lessons.findBy({ moduleId });
+    }
+
+    @Post('modules/:moduleId/lessons')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin')
+    addLesson(@Param('moduleId') moduleId: number, @Body() dto: LessonDto) {
+        return this.lessons.save(this.lessons.create({ ...dto, moduleId }));
+    }
+
+    @Put('lessons/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin')
+    async updateLesson(@Param('id') id: number, @Body() dto: LessonDto) {
+        await this.lessons.update(id, dto); return this.lessons.findOneByOrFail({ id });
+    }
+
+    @Delete('lessons/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin')
+    async deleteLesson(@Param('id') id: number) {
+        await this.lessons.delete(id); return { deleted: true };
+    }
+
+    @Post('lessons/:id/complete')
+    @UseGuards(JwtAuthGuard) async complete(@Req() req: any, @Param('id') lessonId: number) {
+        return this.completions.save(this.completions.create({ userId: req.user.id, lessonId, completedAt: new Date() }));
+    }
+
+    @Post('courses/:id/certificates/issue')
+    @UseGuards(JwtAuthGuard, RolesGuard) @Roles('admin') issue(@Param('id') courseId: number, @Body() dto: IssueCertificateDto) {
+        return this.certificates.save(this.certificates.create({ courseId, userId: dto.userId, certificateNumber: `TC-${courseId}-${Date.now()}`, issuedAt: new Date() }));
+    }
+
+    @Get('courses/:id/certificates')
+    @UseGuards(JwtAuthGuard)
+    certificatesForCourse(@Param('id') courseId: number) {
+        return this.certificates.findBy({ courseId });
+    }
+}
